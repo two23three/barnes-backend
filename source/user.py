@@ -1,14 +1,9 @@
-from flask import Flask, request, jsonify
-from flask_restful import Resource, Api
-from models import db, User, Role
+from flask import request, jsonify
+from flask_restful import Resource
+from models import db, User
 from werkzeug.security import generate_password_hash
+import uuid
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:newpassword@localhost/mydatabase'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-api = Api(app)
 
 class UserResource(Resource):
     def get(self, id=None):
@@ -21,7 +16,9 @@ class UserResource(Resource):
                 'email': user.email,
                 'role_id': user.role_id,
                 'created_at': user.created_at,
-                'updated_at': user.updated_at
+                'updated_at': user.updated_at,
+                'referral_code': user.referral_code,
+                'referred_by': user.referred_by
             }
             return jsonify({'user': user_data})
         else:
@@ -35,7 +32,9 @@ class UserResource(Resource):
                     'email': user.email,
                     'role_id': user.role_id,
                     'created_at': user.created_at,
-                    'updated_at': user.updated_at
+                    'updated_at': user.updated_at,
+                    'referral_code': user.referral_code,
+                    'referred_by': user.referred_by
                 }
                 output.append(user_data)
             return jsonify({'users': output})
@@ -47,10 +46,29 @@ class UserResource(Resource):
         email = data.get('email')
         password = data.get('password')
         role_id = data.get('role_id')
+        referral_code = data.get('referral_code')
 
         password_hash = generate_password_hash(password)
 
-        new_user = User(name=name, phone_number=phone_number, email=email, password_hash=password_hash, role_id=role_id)
+        # Check if referral code exists and is valid
+        referred_by_user = None
+        if referral_code:
+            referred_by_user = User.query.filter_by(referral_code=referral_code).first()
+            if not referred_by_user:
+                return {'message': 'Invalid referral code'}, 400
+
+        # Generate a unique referral code for the new user
+        new_user_referral_code = str(uuid.uuid4())
+
+        new_user = User(
+            name=name,
+            phone_number=phone_number,
+            email=email,
+            password_hash=password_hash,
+            role_id=role_id,
+            referral_code=new_user_referral_code,
+            referred_by=referred_by_user.referral_code if referred_by_user else None
+        )
         db.session.add(new_user)
         db.session.commit()
 
@@ -77,7 +95,4 @@ class UserResource(Resource):
         db.session.commit()
 
         return {'message': 'User deleted successfully'}
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    
