@@ -6,6 +6,7 @@ from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCateg
 from user import UserResource, UsersFinancialReport
 from income import IncomeResource, IncomeCategoryResource
 from expense import ExpenseResource, ExpenseCategoryResource
+from source.transaction import TransactionResource
 import config
 from assets import AssetResource 
 
@@ -40,6 +41,7 @@ api.add_resource(ExpenseResource, '/expenses', '/expenses/<int:id>')
 api.add_resource(ExpenseCategoryResource, '/categories', '/categories/<int:id>')
 api.add_resource(AssetResource, '/assets', '/assets/<int:id>')
 api.add_resource(UsersFinancialReport, '/user/<int:user_id>/financialreports', '/user/<int:user_id>/financialreports/<int:report_id>')
+api.add_resource(TransactionResource, '/transactions', '/transactions/<int:id>')
 @app.route('/')
 def index():
     return "Welcome to Barnes!"
