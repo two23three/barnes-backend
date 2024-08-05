@@ -99,6 +99,30 @@ def signup():
         'msg': 'User created successfully'
     }), 201
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    if not all(key in data for key in ('email', 'password')):
+        return jsonify({'msg': 'Missing required fields'}), 400
+
+    email = data.get('email')
+    password = data.get('password')
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not bcrypt.check_password_hash(user.password_hash, password):
+        return jsonify({'msg': 'Invalid credentials'}), 401
+
+    access_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+
+    return jsonify({
+        'msg': 'Login successful',
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }), 200
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
