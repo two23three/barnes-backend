@@ -3,7 +3,7 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_restful import Api
 from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction, Asset, SavingsGoal, Setting
-from user import UserResource
+from user import UserResource, UsersFinancialReport
 from income import IncomeResource, IncomeCategoryResource
 from expense import ExpenseResource, ExpenseCategoryResource
 import config
@@ -39,6 +39,7 @@ api.add_resource(IncomeCategoryResource, '/income_categories', '/income_categori
 api.add_resource(ExpenseResource, '/expenses', '/expenses/<int:id>')
 api.add_resource(ExpenseCategoryResource, '/categories', '/categories/<int:id>')
 api.add_resource(AssetResource, '/assets', '/assets/<int:id>')
+api.add_resource(UsersFinancialReport, '/user/<int:user_id>/financialreports', '/user/<int:user_id>/financialreports/<int:report_id>')
 @app.route('/')
 def index():
     return "Welcome to Barnes!"
