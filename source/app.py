@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import Flask, request, jsonify
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_restful import Api
@@ -14,6 +15,8 @@ import config
 from assets import AssetResource 
 from savingsGoal import SavingsGoalResource
 from settings import SettingResource
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_bcrypt import Bcrypt
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
@@ -21,6 +24,8 @@ app.config.from_object(config.Config)
 db.init_app(app)
 api = Api(app)
 admin = Admin(app, name='MyApp', template_mode='bootstrap3')
+jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
 
 # Add model views to Flask-Admin
 admin.add_view(UserModelView(User, db.session))
@@ -52,6 +57,47 @@ api.add_resource(SavingsGoalResource, '/savings', '/savings/<int:id>')
 @app.route('/')
 def index():
     return "Welcome to Barnes!"
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+
+    # Validate input data
+    if not all(key in data for key in ('name', 'email', 'password', 'role_id')):
+        return jsonify({'msg': 'Missing required fields'}), 400
+
+    name = data.get('name')
+    phone_number = data.get('phone_number')
+    email = data.get('email')
+    password = data.get('password')
+    role_id = data.get('role_id')
+
+    # Check if user already exists
+    if User.query.filter_by(email=email).first():
+        return jsonify({'msg': 'User already exists'}), 400
+
+    # Hash the password using Flask-Bcrypt
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    # Create a new user
+    new_user = User(
+        name=name,
+        phone_number=phone_number,
+        email=email,
+        password_hash=hashed_password,
+        role_id=role_id
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    # Create access token
+    access_token = create_access_token(identity=new_user.id)
+    refresh_token = create_refresh_token(identity=new_user.id)
+
+    return jsonify({
+        'msg': 'User created successfully'
+    }), 201
 
 if __name__ == '__main__':
     with app.app_context():
