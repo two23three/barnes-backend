@@ -8,6 +8,7 @@ from models import db, User
 import config
 from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction, Asset, SavingsGoal, Setting
 from user import UserResource
+from expense import ExpenseResource, ExpenseCategoryResource
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
@@ -34,6 +35,8 @@ admin.add_view(ModelView(Setting, db.session))
 
 # Add UserResource to the API
 api.add_resource(UserResource, '/users', '/users/<int:id>')
+api.add_resource(ExpenseResource, '/expenses', '/expenses/<int:id>')
+api.add_resource(ExpenseCategoryResource, '/categories', '/categories/<int:id>')
 
 def insert_default_roles():
     if not Role.query.first():
