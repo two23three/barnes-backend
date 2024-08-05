@@ -9,7 +9,7 @@ from expense import ExpenseResource, ExpenseCategoryResource
 from source.transaction import TransactionResource
 import config
 from assets import AssetResource 
-
+from savingsGoal import SavingsGoalResource
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
@@ -42,6 +42,7 @@ api.add_resource(ExpenseCategoryResource, '/categories', '/categories/<int:id>')
 api.add_resource(AssetResource, '/assets', '/assets/<int:id>')
 api.add_resource(UsersFinancialReport, '/user/<int:user_id>/financialreports', '/user/<int:user_id>/financialreports/<int:report_id>')
 api.add_resource(TransactionResource, '/transactions', '/transactions/<int:id>')
+api.add_resource(SavingsGoalResource, '/savings', '/savings/<int:id>')
 @app.route('/')
 def index():
     return "Welcome to Barnes!"
