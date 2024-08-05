@@ -11,6 +11,7 @@ from source.transaction import TransactionResource
 import config
 from assets import AssetResource 
 from savingsGoal import SavingsGoalResource
+from settings import SettingResource
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
