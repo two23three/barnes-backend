@@ -50,7 +50,7 @@ class IncomeCategory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     user = db.relationship('User', backref=db.backref('income_categories', lazy=True))
-
+    
 class Expense(db.Model):
     __tablename__ = 'expenses'
 
