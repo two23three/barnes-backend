@@ -50,3 +50,28 @@ class IncomeCategory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     user = db.relationship('User', backref=db.backref('income_categories', lazy=True))
+    
+class Expense(db.Model):
+    __tablename__ = 'expenses'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Numeric, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    description = db.Column(db.String, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('expenses', lazy=True))
+    category = db.relationship('ExpenseCategory', backref=db.backref('expenses', lazy=True))
+
+class ExpenseCategory(db.Model):
+    __tablename__ = 'expense_categories'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('expense_categories', lazy=True))
