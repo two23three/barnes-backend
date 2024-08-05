@@ -129,8 +129,5 @@ class IncomeCategoryResource(Resource):
         db.session.commit()
         return {'message': 'Income category deleted successfully'}
 
-api.add_resource(IncomeResource, '/incomes', '/incomes/<int:id>')
-api.add_resource(IncomeCategoryResource, '/income_categories', '/income_categories/<int:id>')
-
 if __name__ == '__main__':
     app.run(debug=True)
