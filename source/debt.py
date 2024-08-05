@@ -3,10 +3,7 @@ from flask_restful import Resource, Api
 from datetime import datetime
 from models import db, Debt
 
-app = Flask(__name__)
-app.config.from_object('config.Config')
-db.init_app(app)
-api = Api(app)
+
 
 class DebtResource(Resource):
     def get(self, id=None):
@@ -85,7 +82,3 @@ class DebtResource(Resource):
 
         return {'message': 'Debt deleted successfully'}
 
-api.add_resource(DebtResource, '/debts', '/debts/<int:id>')
-
-if __name__ == '__main__':
-    app.run(debug=True)

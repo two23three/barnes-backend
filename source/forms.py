@@ -52,9 +52,9 @@ class ExpenseForm(FlaskForm):
 class DebtForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
-    principal_amount = StringField('Principal Amount',coerce=int, validators=[DataRequired()])
+    principal_amount = StringField('Amount', validators=[DataRequired()])
     interest_rate = StringField('Interest Rate')
-    remaining_balance = StringField('Remaining Balance',coerce=int, validators=[DataRequired()])
+    remaining_balance = StringField('Remaining Balance', validators=[DataRequired()])
     due_date = DateField('Due Date', format='%Y-%m-%d', validators=[DataRequired()])
     description = StringField('Description')
 
@@ -69,7 +69,7 @@ class DebtForm(FlaskForm):
 # Create a custom form for the DebtPayment model
 class DebtPaymentForm(FlaskForm):
     debt_id = SelectField('Debt', coerce=int, validators=[DataRequired()])
-    amount = StringField('Amount', coerce=int, validators=[DataRequired()])
+    amount = StringField('Amount', validators=[DataRequired()])
     payment_date = DateField('Payment Date', format='%Y-%m-%d', validators=[DataRequired()])
     description = StringField('Description')
 
@@ -92,7 +92,7 @@ class FinancialReportForm(FlaskForm):
 # Create a custom form for the Transaction model
 class TransactionForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
-    amount = DecimalField('Amount', validators=[DataRequired()], places=2)  # Using DecimalField for monetary values
+    amount = StringField('Amount', validators=[DataRequired()])  # Using DecimalField for monetary values
     transaction_type = StringField('Transaction Type', validators=[DataRequired()])
     category_id = SelectField('Category', coerce=int)  # Optional field
     date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
@@ -109,7 +109,7 @@ class TransactionForm(FlaskForm):
 class AssetForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
-    value = DecimalField('Value', validators=[DataRequired()], places=2)  # Using DecimalField for monetary values
+    value = StringField('Value', validators=[DataRequired()])  # Using DecimalField for monetary values
     purchase_date = DateField('Purchase Date', format='%Y-%m-%d', validators=[DataRequired()])
     description = StringField('Description')
 
@@ -122,8 +122,8 @@ class AssetForm(FlaskForm):
 class SavingsGoalForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
-    target_amount = DecimalField('Target Amount', validators=[DataRequired()], places=2)  # Using DecimalField for monetary values
-    current_amount = DecimalField('Current Amount', validators=[DataRequired()], places=2)  # Using DecimalField for monetary values
+    target_amount = StringField('Target Amount', validators=[DataRequired()])
+    current_amount = StringField('Current Amount', validators=[DataRequired()])
     start_date = DateField('Start Date', format='%Y-%m-%d', validators=[DataRequired()])
     end_date = DateField('End Date', format='%Y-%m-%d')  # Optional field
     description = StringField('Description')
