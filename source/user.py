@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from flask_restful import Resource
-from models import db, User
+from models import db, User, FinancialReport
 from werkzeug.security import generate_password_hash
 import uuid
 
@@ -95,4 +95,65 @@ class UserResource(Resource):
         db.session.commit()
 
         return {'message': 'User deleted successfully'}
+    
+class UsersFinancialReport(Resource):
+    def get(self, user_id, report_id=None):
+        if report_id:
+            report = FinancialReport.query.filter_by(user_id=user_id, id=report_id).first_or_404()
+            report_data = {
+                'id': report.id,
+                'user_id': report.user_id,
+                'report_type': report.report_type,
+                'report_data': report.report_data,
+                'created_at': report.created_at,
+                'updated_at': report.updated_at
+            }
+            return jsonify({'financial_report': report_data})
+        else:
+            reports = FinancialReport.query.filter_by(user_id=user_id).all()
+            output = []
+            for report in reports:
+                report_data = {
+                    'id': report.id,
+                    'user_id': report.user_id,
+                    'report_type': report.report_type,
+                    'report_data': report.report_data,
+                    'created_at': report.created_at,
+                    'updated_at': report.updated_at
+                }
+                output.append(report_data)
+            return jsonify({'financial_reports': output})
+
+    def post(self, user_id):
+        data = request.get_json()
+        report_type = data.get('report_type')
+        report_data = data.get('report_data')
+
+        user = User.query.get_or_404(user_id)
+
+        new_report = FinancialReport(
+            user_id=user_id,
+            report_type=report_type,
+            report_data=report_data
+        )
+        db.session.add(new_report)
+        db.session.commit()
+
+        return {'message': 'Financial report created successfully'}, 201
+
+    def put(self, user_id, report_id):
+        data = request.get_json()
+        report = FinancialReport.query.filter_by(user_id=user_id, id=report_id).first_or_404()
+
+        report.report_type = data.get('report_type', report.report_type)
+        report.report_data = data.get('report_data', report.report_data)
+
+        db.session.commit()
+
+        return {'message': 'Financial report updated successfully'}
+
+    def delete(self, user_id, report_id):
+        report = FinancialReport.query.filter_by(user_id=user_id, id=report_id).first_or_404()
+        db.session.delete(report)
+        db.session.commit()
     
