@@ -2,10 +2,10 @@ from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from datetime import datetime
 from models import db, Expense, ExpenseCategory
+from config import Config
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:newpassword@localhost/mydatabase'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object(Config)
 
 db.init_app(app)
 api = Api(app)
