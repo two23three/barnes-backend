@@ -1,0 +1,2 @@
+GET https://barnes.onrender.com/token
+
