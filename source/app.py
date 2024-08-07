@@ -3,6 +3,7 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_restful import Api
 from flask_cors import CORS  
+from mpesa import mpesa_bp
 from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction, Asset, SavingsGoal, Setting
 from user import UserResource, UsersFinancialReport
 from views import UserModelView, IncomeModelView, ExpenseModelView, DebtModelView, DebtPaymentModelView, TransactionModelView, AssetModelView, SavingsGoalModelView, SettingModelView
@@ -26,6 +27,7 @@ import re
 
 app = Flask(__name__)
 app.config.from_object(config.Config)
+app.register_blueprint(mpesa_bp, url_prefix='/mpesa')
 
 # Initialize extensions
 db.init_app(app)
@@ -166,59 +168,6 @@ def login():
         'access_token': access_token,
         'refresh_token': refresh_token
     }), 200
-consumer_key = 'ea0HATa5psrjBgZTqYtFnEkDWV95OJpejEma41qDiSxvwHHD'
-consumer_secret = 'GYejBdnK6hDdpgTCjPaG5tAeM9pK2xkn9ghASvO20g3UAs6vQMuupj6HY221j0SP'
-
-@app.route('/token')
-def get_token():
-    token = generate_access_token(consumer_key, consumer_secret)
-    return jsonify({'access_token': token})
-
-def generate_access_token(consumer_key, consumer_secret):
-    api_url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
-    response = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
-    json_response = response.json()
-    access_token = json_response['access_token']
-    return access_token
-
-@app.route('/register_urls', methods=['POST'])
-def register_urls():
-    access_token = generate_access_token(consumer_key, consumer_secret)
-    api_url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl"
-    headers = {"Authorization": "Bearer %s" % access_token}
-    request_data = {
-        "ShortCode": "YOUR_SHORT_CODE",
-        "ResponseType": "Completed",
-        "ConfirmationURL": "https://Barnes.com/confirmation",
-        "ValidationURL": "https://Barnes.com/validation"
-    }
-    response = requests.post(api_url, json=request_data, headers=headers)
-    return jsonify(response.json())
-@app.route('/validation', methods=['POST'])
-def validation():
-    data = request.get_json()
-    # Process validation logic here
-    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"})
-
-@app.route('/confirmation', methods=['POST'])
-def confirmation():
-    data = request.get_json()
-    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"})
-@app.route('/simulate', methods=['POST'])
-def simulate():
-    access_token = generate_access_token(consumer_key, consumer_secret)
-    api_url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate"
-    headers = {"Authorization": "Bearer %s" % access_token}
-    request_data = {
-        "ShortCode": "YOUR_SHORT_CODE",
-        "CommandID": "CustomerPayBillOnline",
-        "Amount": "100",
-        "Msisdn": "254708374149",
-        "BillRefNumber": "TestAPI"
-    }
-    response = requests.post(api_url, json=request_data, headers=headers)
-    return jsonify(response.json())
-
 
 
 if __name__ == '__main__':
