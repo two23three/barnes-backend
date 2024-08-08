@@ -70,7 +70,7 @@ api.add_resource(SettingResource, '/settings', '/settings/<int:id>')
 
 # Define validation patterns
 email_pattern = re.compile(r"[^@]+@[^@]+\.[^@]+")
-kenyan_phone_pattern = re.compile(r"^(?:\+254|0)[71]\d{8}$")
+kenyan_phone_pattern = re.compile(r"^254[71]\d{8}$")
 
 @app.route('/')
 def index():
@@ -80,7 +80,7 @@ def index():
 def signup():
     data = request.get_json()
     
-    if not all(key in data for key in ('name', 'email', 'password', 'role_id')):
+    if not all(key in data for key in ('name', 'email', 'password', 'role_id', 'phone_number')):
         return jsonify({'msg': 'Missing required fields'}), 400
     
     name = data.get('name')
@@ -95,8 +95,13 @@ def signup():
     
     if not email_pattern.match(email):
         return jsonify({'msg': 'Invalid email format'}), 400
-
-    if phone_number and not kenyan_phone_pattern.match(phone_number):
+    
+    # Convert phone numbers starting with '0' to '254'
+    if phone_number.startswith('0'):
+        phone_number = '254' + phone_number[1:]
+    
+    # Validate the phone number format after conversion
+    if not kenyan_phone_pattern.match(phone_number):
         return jsonify({'msg': 'Invalid phone number format'}), 400
     
     referred_by_user = None
@@ -122,8 +127,8 @@ def signup():
     db.session.add(new_user)
     
     if referred_by_user:
-        referred_by_user.referral_count += 1  # Increment referral count
-        db.session.add(referred_by_user)  # Ensure referred_by_user is added to the session
+        referred_by_user.referral_count += 1
+        db.session.add(referred_by_user)
     
     db.session.commit()
     
@@ -135,6 +140,8 @@ def signup():
         'access_token': access_token,
         'refresh_token': refresh_token
     }), 201
+
+
 
 @app.route('/login', methods=['POST'])
 def login():
