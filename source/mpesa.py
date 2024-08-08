@@ -1,7 +1,7 @@
-
 import requests
 from requests.auth import HTTPBasicAuth
 from flask import Blueprint, jsonify, request
+from models import db, User  
 
 mpesa_bp = Blueprint('mpesa', __name__)
 
@@ -15,9 +15,27 @@ def generate_access_token(consumer_key, consumer_secret):
     access_token = json_response['access_token']
     return access_token
 
+def get_user_by_id(user_id):
+    """
+    Fetches user details from the database by user_id.
+
+    :param user_id: ID of the user.
+    :return: A dictionary containing user details or None if the user is not found.
+    """
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        return {
+            'id': user.id,
+            'phone_number': user.phone_number,
+            'email': user.email,
+            'name': user.name
+        }
+    return None
+
 @mpesa_bp.route('/home/', methods=['GET'])
 def home():
     return jsonify({'message': 'MPESA API home'})
+
 @mpesa_bp.route('/token', methods=['GET'])
 def get_token():
     try:
@@ -77,9 +95,21 @@ def simulate():
 def stk_push():
     try:
         data = request.get_json()
-        phone_number = data.get('phone_number')
+        user_id = data.get('user_id')
         amount = data.get('amount')
-        account_number = data.get('account_number')
+
+        # Validate the amount 
+        if not amount or not isinstance(amount, (int, float)) or amount <= 0:
+            return jsonify({'error': 'Invalid amount'}), 400
+
+        # Fetching the user's details using user_id
+        user = get_user_by_id(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        phone_number = user.get('phone_number')
+        if not phone_number:
+            return jsonify({'error': 'Phone number not found for the user'}), 404
 
         access_token = generate_access_token(consumer_key, consumer_secret)
         api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
@@ -92,10 +122,10 @@ def stk_push():
             "Password": "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwODA4MTIxMzI4",
             "Timestamp": "20240808121328",
             "TransactionType": "CustomerPayBillOnline",
-            "Amount": 1,
-            "PartyA": 254701584681,
+            "Amount": amount,
+            "PartyA": phone_number,
             "PartyB": 174379,
-            "PhoneNumber": 254701584681,
+            "PhoneNumber": phone_number,
             "CallBackURL": "https://mydomain.com/path",
             "AccountReference": "Barnes",
             "TransactionDesc": "Savings"
@@ -104,3 +134,4 @@ def stk_push():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
