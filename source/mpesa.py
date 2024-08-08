@@ -33,10 +33,10 @@ def register_urls():
         api_url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl"
         headers = {"Authorization": "Bearer %s" % access_token}
         request_data = {
-            "ShortCode": "YOUR_SHORT_CODE",
+            "ShortCode": "600987", 
             "ResponseType": "Completed",
-            "ConfirmationURL": "https://Barnes.com/confirmation",
-            "ValidationURL": "https://Barnes.com/validation"
+            "ConfirmationURL": "https://barnes.onrender.com/m/confirmation",
+            "ValidationURL": "https://barnes.onrender.com/m/validation"
         }
         response = requests.post(api_url, json=request_data, headers=headers)
         return jsonify(response.json())
