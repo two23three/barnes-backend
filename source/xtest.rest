@@ -1,2 +1,13 @@
-GET https://barnes.onrender.com/token
+POST  http://0.0.0.0:5000/signup
+Content-Type: application/json
+
+{
+"name": "Mike",
+"email": "Mike@example.com",
+"phone_number":"0722222222",
+"password": "1234",
+"role_id":2,
+"referral_code":"Sha-7497"
+
+}
 

@@ -5,6 +5,8 @@ attrs==22.2.0
 backcall==0.2.0
 bcrypt==4.2.0
 blinker==1.8.2
+certifi==2024.7.4
+charset-normalizer==3.3.2
 click==8.1.7
 decorator==5.1.1
 exceptiongroup==1.1.1
@@ -21,6 +23,7 @@ Flask-SQLAlchemy==3.1.1
 Flask-WTF==1.2.1
 greenlet==3.0.3
 gunicorn==22.0.0
+idna==3.7
 importlib-resources==5.12.0
 importlib_metadata==8.2.0
 iniconfig==2.0.0
@@ -42,11 +45,12 @@ psycopg2-binary==2.9.9
 ptyprocess==0.7.0
 pure-eval==0.2.2
 Pygments==2.14.0
-PyJWT==2.8.0
+PyJWT==2.9.0
 pytest==7.2.2
 python-dateutil==2.8.2
 python-dotenv==1.0.1
 pytz==2022.7.1
+requests==2.32.3
 six==1.16.0
 SQLAlchemy==2.0.31
 SQLAlchemy-serializer==1.4.1
@@ -54,6 +58,7 @@ stack-data==0.6.2
 tomli==2.0.1
 traitlets==5.9.0
 typing_extensions==4.12.2
+urllib3==2.2.2
 wcwidth==0.2.6
 Werkzeug==3.0.3
 WTForms==3.1.2
