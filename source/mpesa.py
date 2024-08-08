@@ -62,7 +62,7 @@ def simulate():
         api_url = "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate"
         headers = {"Authorization": "Bearer %s" % access_token}
         request_data = {
-            "ShortCode": "YOUR_SHORT_CODE",
+            "ShortCode": "600987",
             "CommandID": "CustomerPayBillOnline",
             "Amount": "100",
             "Msisdn": "254708374149",
