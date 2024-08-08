@@ -80,6 +80,7 @@ class ExpenseCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
+    limit = db.Column(db.Float, nullable=True) 
     
 class Debt(db.Model):
     __tablename__ = 'debts'
