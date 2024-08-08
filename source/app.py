@@ -97,14 +97,12 @@ def signup():
     if phone_number and not kenyan_phone_pattern.match(phone_number):
         return jsonify({'msg': 'Invalid phone number format'}), 400
     
-    # Check if referral code exists and is valid
     referred_by_user = None
     if referral_code:
         referred_by_user = User.query.filter_by(referral_code=referral_code).first()
         if not referred_by_user:
             return jsonify({'msg': 'Invalid referral code'}), 400
     
-    # Generate a unique referral code for the new user
     new_user_referral_code = f"{name[:3]}-{str(uuid.uuid4())[:4]}"
     
     hashed_password = generate_password_hash(password)
@@ -120,6 +118,11 @@ def signup():
     )
     
     db.session.add(new_user)
+    
+    if referred_by_user:
+        referred_by_user.referral_count += 1  # Increment referral count
+        db.session.add(referred_by_user)  # Ensure referred_by_user is added to the session
+    
     db.session.commit()
     
     access_token = create_access_token(identity=new_user.id)
