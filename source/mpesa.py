@@ -97,8 +97,8 @@ def stk_push():
             "PartyB": 174379,
             "PhoneNumber": 254701584681,
             "CallBackURL": "https://mydomain.com/path",
-            "AccountReference": "CompanyXLTD",
-            "TransactionDesc": "Payment of X"
+            "AccountReference": "Barnes",
+            "TransactionDesc": "Savings"
         }
         response = requests.post(api_url, json=request_data, headers=headers)
         return jsonify(response.json())
