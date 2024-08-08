@@ -1,7 +1,8 @@
 import requests
 from requests.auth import HTTPBasicAuth
 from flask import Blueprint, jsonify, request
-from models import db, User  
+from models import db, User, SavingsGoal 
+from decimal import Decimal, InvalidOperation
 
 mpesa_bp = Blueprint('mpesa', __name__)
 
@@ -70,8 +71,26 @@ def validation():
 @mpesa_bp.route('/confirmation', methods=['POST'])
 def confirmation():
     data = request.get_json()
-    # Process confirmation logic here
-    return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"})
+    phone_number = data.get('MSISDN')
+    amount = data.get('Amount')
+
+    try:
+        amount = Decimal(amount)  # Convert the amount to Decimal
+    except (ValueError, InvalidOperation) as e:
+        return jsonify({"ResultCode": 1, "ResultDesc": "Invalid amount format"}), 400
+
+    # Find the user associated with the phone number
+    user = User.query.filter_by(phone_number=phone_number).first()
+    if user:
+        # Update the user's savings goal
+        savings_goal = SavingsGoal.query.filter_by(user_id=user.id).first()
+        if savings_goal:
+            savings_goal.current_amount += amount
+            db.session.commit()
+            return jsonify({"ResultCode": 0, "ResultDesc": "Accepted"})
+    
+    return jsonify({"ResultCode": 1, "ResultDesc": "Failed"}), 400
+
 
 @mpesa_bp.route('/simulate', methods=['POST'])
 def simulate():
@@ -90,7 +109,7 @@ def simulate():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @mpesa_bp.route('/stk_push', methods=['POST'])
 def stk_push():
     try:
@@ -131,7 +150,17 @@ def stk_push():
             "TransactionDesc": "Savings"
         }
         response = requests.post(api_url, json=request_data, headers=headers)
-        return jsonify(response.json())
+        response_data = response.json()
+
+        if response_data.get('ResponseCode') == '0': 
+            # Update the user's savings goal
+            savings_goals = SavingsGoal.query.filter_by(user_id=user_id).all()
+            for goal in savings_goals:
+                goal.current_amount += amount
+                db.session.add(goal)
+            db.session.commit()
+            return jsonify({'message': 'STK push successful', 'data': response_data})
+        else:
+            return jsonify({'error': 'STK push failed', 'data': response_data}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
