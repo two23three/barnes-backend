@@ -29,7 +29,7 @@ import re
 app = Flask(__name__)
 app.config.from_object(config.Config)
 migrate = Migrate(app, db)
-app.register_blueprint(mpesa_bp, url_prefix='/mpesa')
+app.register_blueprint(mpesa_bp, url_prefix='/m')
 
 # Initialize extensions
 db.init_app(app)
