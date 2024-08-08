@@ -72,3 +72,35 @@ def simulate():
         return jsonify(response.json())
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@mpesa_bp.route('/stk_push', methods=['POST'])
+def stk_push():
+    try:
+        data = request.get_json()
+        phone_number = data.get('phone_number')
+        amount = data.get('amount')
+        account_number = data.get('account_number')
+
+        access_token = generate_access_token(consumer_key, consumer_secret)
+        api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+        headers = {
+            "Authorization": "Bearer %s" % access_token,
+            "Content-Type": "application/json"
+        }
+        request_data = {
+            "BusinessShortCode": 174379,
+            "Password": "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwODA4MTIxMzI4",
+            "Timestamp": "20240808121328",
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": 1,
+            "PartyA": 254701584681,
+            "PartyB": 174379,
+            "PhoneNumber": 254701584681,
+            "CallBackURL": "https://mydomain.com/path",
+            "AccountReference": "CompanyXLTD",
+            "TransactionDesc": "Payment of X"
+        }
+        response = requests.post(api_url, json=request_data, headers=headers)
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
