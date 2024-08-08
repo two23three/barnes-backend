@@ -74,7 +74,7 @@ kenyan_phone_pattern = re.compile(r"^(?:\+254|0)[71]\d{8}$")
 
 @app.route('/')
 def index():
-    return "Welcome to BizzGogo!"
+    return "Welcome to Barnes!"
 
 @app.route('/signup', methods=['POST'])
 def signup():
