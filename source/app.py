@@ -20,6 +20,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import requests
 from requests.auth import HTTPBasicAuth
+from flask_migrate import Migrate
 
 from flask_bcrypt import Bcrypt
 import config
@@ -27,6 +28,7 @@ import re
 
 app = Flask(__name__)
 app.config.from_object(config.Config)
+migrate = Migrate(app, db)
 app.register_blueprint(mpesa_bp, url_prefix='/mpesa')
 
 # Initialize extensions
