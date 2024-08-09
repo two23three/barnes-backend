@@ -12,21 +12,38 @@ db.init_app(app)
 api = Api(app)
 
 class ExpenseResource(Resource):
-
-    def get(self, id):
-        expense = Expense.query.get_or_404(id)
-        expense_data = {
-            'id': expense.id,
-            'user_id': expense.user_id,
-            'amount': str(expense.amount),
-            'category_id': expense.category_id,
-            'date': expense.date.strftime('%Y-%m-%d'),
-            'description': expense.description,
-            'is_recurring': expense.is_recurring,
-            'created_at': expense.created_at.isoformat(),
-            'updated_at': expense.updated_at.isoformat()
-        }
-        return jsonify({'expense': expense_data})
+    def get(self, id=None):
+        if id:
+            expense = Expense.query.get_or_404(id)
+            expense_data = {
+                'id': expense.id,
+                'user_id': expense.user_id,
+                'amount': str(expense.amount),
+                'category_id': expense.category_id,
+                'date': expense.date.strftime('%Y-%m-%d'),
+                'description': expense.description,
+                'is_recurring': expense.is_recurring,
+                'created_at': expense.created_at,
+                'updated_at': expense.updated_at
+            }
+            return jsonify({'expense': expense_data})
+        else:
+            expenses = Expense.query.all()
+            output = []
+            for expense in expenses:
+                expense_data = {
+                    'id': expense.id,
+                    'user_id': expense.user_id,
+                    'amount': str(expense.amount),
+                    'category_id': expense.category_id,
+                    'date': expense.date.strftime('%Y-%m-%d'),
+                    'description': expense.description,
+                    'is_recurring': expense.is_recurring,
+                    'created_at': expense.created_at,
+                    'updated_at': expense.updated_at
+                }
+                output.append(expense_data)
+            return jsonify({'expenses': output})
 
     def delete(self, id):
         expense = Expense.query.get_or_404(id)
