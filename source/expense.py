@@ -3,6 +3,7 @@ from flask_restful import Resource, Api
 from datetime import datetime
 from models import db, Expense, ExpenseCategory
 from config import Config
+from decimal import Decimal, InvalidOperation
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -13,12 +14,11 @@ api = Api(app)
 class ExpenseResource(Resource):
 
     def get(self, id):
-        # Fetch the expense by id or return a 404 error if not found
         expense = Expense.query.get_or_404(id)
         expense_data = {
             'id': expense.id,
             'user_id': expense.user_id,
-            'amount': str(expense.amount),  # Convert Decimal to string for JSON serialization
+            'amount': str(expense.amount),
             'category_id': expense.category_id,
             'date': expense.date.strftime('%Y-%m-%d'),
             'description': expense.description,
@@ -29,41 +29,34 @@ class ExpenseResource(Resource):
         return jsonify({'expense': expense_data})
 
     def delete(self, id):
-        # Fetch the expense by id or return a 404 error if not found
         expense = Expense.query.get_or_404(id)
         category = ExpenseCategory.query.get_or_404(expense.category_id)
         
-        # Calculate the total expenses excluding this one
-        total_expenses = sum(e.amount for e in Expense.query.filter_by(category_id=category.id).all() if e.id != id)
+        total_expenses = sum(Decimal(e.amount) for e in Expense.query.filter_by(category_id=category.id).all() if e.id != id)
         
-        # Check if removing this expense will cause the remaining expenses to exceed the limit
-        if category.limit and total_expenses > category.limit:
+        if category.limit and total_expenses > Decimal(category.limit):
             return jsonify({'message': 'Cannot delete expense: category limit would be exceeded'}), 400
         
-        # Delete the expense
         db.session.delete(expense)
         db.session.commit()
 
         return jsonify({'message': 'Expense deleted successfully'})
+    
     def post(self):
         data = request.get_json()
         user_id = data.get('user_id')
-        amount = data.get('amount')
+        amount = Decimal(data.get('amount'))
         category_id = data.get('category_id')
         date = datetime.strptime(data.get('date'), '%Y-%m-%d')
         description = data.get('description')
 
-        # Fetch the category and handle category not found
         category = ExpenseCategory.query.get_or_404(category_id)
 
-        # Calculate the total expenses in this category, including the new one
-        total_expenses = sum(expense.amount for expense in Expense.query.filter_by(category_id=category_id).all()) + amount
+        total_expenses = sum(Decimal(expense.amount) for expense in Expense.query.filter_by(category_id=category_id).all()) + amount
         
-        # Check if adding the new expense would exceed the category limit
-        if category.limit and total_expenses > category.limit:
+        if category.limit and total_expenses > Decimal(category.limit):
             return jsonify({'message': 'Cannot add expense: category limit exceeded'}), 400
 
-        # Create the new expense
         new_expense = Expense(
             user_id=user_id, 
             amount=amount, 
@@ -81,16 +74,13 @@ class ExpenseResource(Resource):
         expense = Expense.query.get_or_404(id)
         category = ExpenseCategory.query.get_or_404(expense.category_id)
 
-        new_amount = data.get('amount', expense.amount)
+        new_amount = Decimal(data.get('amount', expense.amount))
         
-        # Calculate the total expenses excluding the current expense and including the new amount
-        total_expenses = sum(e.amount for e in Expense.query.filter_by(category_id=category.id).all() if e.id != id) + new_amount
+        total_expenses = sum(Decimal(e.amount) for e in Expense.query.filter_by(category_id=category.id).all() if e.id != id) + new_amount
         
-        # Check if updating the expense would exceed the category limit
-        if category.limit and total_expenses > category.limit:
+        if category.limit and total_expenses > Decimal(category.limit):
             return jsonify({'message': 'Cannot update expense: category limit exceeded'}), 400
 
-        # Update the expense
         expense.user_id = data.get('user_id', expense.user_id)
         expense.amount = new_amount
         expense.category_id = data.get('category_id', expense.category_id)
@@ -111,7 +101,7 @@ class ExpenseCategoryResource(Resource):
                 'name': category.name,
                 'description': category.description,
                 'user_id': category.user_id,
-                'limit': category.limit  # Include limit in the response
+                'limit': str(category.limit)  # Convert limit to string for JSON serialization
             }
             return jsonify({'category': category_data})
         else:
@@ -123,7 +113,7 @@ class ExpenseCategoryResource(Resource):
                     'name': category.name,
                     'description': category.description,
                     'user_id': category.user_id,
-                    'limit': category.limit  # Include limit in the response
+                    'limit': str(category.limit)  # Convert limit to string for JSON serialization
                 }
                 output.append(category_data)
             return jsonify({'categories': output})
@@ -133,7 +123,12 @@ class ExpenseCategoryResource(Resource):
         name = data.get('name')
         description = data.get('description')
         user_id = data.get('user_id')
-        limit = data.get('limit')  # Optional limit field
+        limit_str = data.get('limit')  # Optional limit field
+
+        try:
+            limit = Decimal(limit_str) if limit_str else None
+        except (InvalidOperation, ValueError):
+            return jsonify({'message': 'Invalid limit value'}), 400
 
         # Create new category
         new_category = ExpenseCategory(
@@ -154,7 +149,13 @@ class ExpenseCategoryResource(Resource):
         category.name = data.get('name', category.name)
         category.description = data.get('description', category.description)
         category.user_id = data.get('user_id', category.user_id)
-        category.limit = data.get('limit', category.limit)
+        
+        limit_str = data.get('limit')
+        if limit_str is not None:
+            try:
+                category.limit = Decimal(limit_str)
+            except (InvalidOperation, ValueError):
+                return jsonify({'message': 'Invalid limit value'}), 400
 
         db.session.commit()
 
