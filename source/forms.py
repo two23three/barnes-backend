@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, StringField, PasswordField, DateField, BooleanField, TextAreaField, DecimalField
 from wtforms.validators import DataRequired
 from models import User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction,Asset, SavingsGoal, Setting
+from decimal import Decimal
 
 # Create a custom form for the User model
 class UserForm(FlaskForm):
@@ -38,15 +39,54 @@ class ExpenseForm(FlaskForm):
     amount = StringField('Amount', validators=[DataRequired()])
     date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
     description = StringField('Description')
-    is_recurring = BooleanField('Reccurring')
+    is_recurring = BooleanField('Recurring')
     category_id = SelectField('Category', coerce=int, validators=[DataRequired()])
 
     def __init__(self, *args, **kwargs):
         super(ExpenseForm, self).__init__(*args, **kwargs)
-        # Populate the user_id select field with options from the users table
         self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
-        # Populate the category_id select field with options from the expense_categories table
         self.category_id.choices = [(category.id, category.name) for category in ExpenseCategory.query.all()]
+
+    def validate(self):
+        # First, run the default validations
+        if not super(ExpenseForm, self).validate():
+            return False
+
+        # Retrieve the selected category from the database
+        category = ExpenseCategory.query.get(self.category_id.data)
+        if not category:
+            self.category_id.errors.append('Invalid category selected.')
+            return False
+
+        # Debugging: Check what values we're working with
+        print(f"Category Limit: {category.limit}")
+        print(f"Form Amount: {self.amount.data}")
+
+        # Calculate total expenses in this category excluding the current expense
+        existing_expenses = Expense.query.filter_by(category_id=self.category_id.data).all()
+        total_expenses = sum(expense.amount for expense in existing_expenses)
+
+        # Debugging: Print the total existing expenses
+        print(f"Total Existing Expenses: {total_expenses}")
+
+        # Add the new expense amount
+        try:
+            new_expense_amount = Decimal(self.amount.data)
+            total_expenses += new_expense_amount
+        except ValueError:
+            self.amount.errors.append('Invalid amount format.')
+            return False
+
+        # Debugging: Check the total after adding the new expense
+        print(f"Total Expenses After Adding New: {total_expenses}")
+
+        # Check if the total exceeds the category limit
+        if category.limit and total_expenses > category.limit:
+            self.amount.errors.append(f'This expense would exceed the limit for {category.name}.')
+            print(f"Validation Error: Total exceeds the limit.")
+            return False
+
+        return True
 
 # Create a custom form for the Debt model
 class DebtForm(FlaskForm):

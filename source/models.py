@@ -63,7 +63,7 @@ class Expense(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    amount = db.Column(db.Numeric, nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String, nullable=True)
@@ -80,7 +80,7 @@ class ExpenseCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
-    limit = db.Column(db.Float, nullable=True) 
+    limit = db.Column(db.Numeric(10, 2), nullable=True) 
     
 class Debt(db.Model):
     __tablename__ = 'debts'
