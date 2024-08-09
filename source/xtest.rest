@@ -1,4 +1,4 @@
-POST http://barnes.onrender.com/signup
+POST http://0.0.0.0:5000/signup
 Content-Type: application/json
 
 {
@@ -6,7 +6,7 @@ Content-Type: application/json
 "phone_number":"0712345678",
 "email":"helmer@gmail.com",
 "password":"1234",
-"role_id":
+"role_id":1
 }
 
 

@@ -23,6 +23,9 @@ class User(db.Model):
 
     role = db.relationship('Role', backref=db.backref('users', lazy=True))
 
+    # Backref to refer to the referring user
+    referring_user = db.relationship('User', remote_side=[referral_code], backref=db.backref('referred_users', lazy=True))
+
     incomes = db.relationship('Income', backref='user', cascade="all, delete-orphan", lazy=True)
     expenses = db.relationship('Expense', backref='user', cascade="all, delete-orphan", lazy=True)
     debts = db.relationship('Debt', backref='user', cascade="all, delete-orphan", lazy=True)
