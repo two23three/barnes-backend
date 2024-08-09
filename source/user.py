@@ -24,9 +24,8 @@ class UserResource(Resource):
             return jsonify({'user': user_data})
         else:
             users = User.query.all()
-            output = []
-            for user in users:
-                user_data = {
+            output = [
+                {
                     'id': user.id,
                     'name': user.name,
                     'phone_number': user.phone_number,
@@ -38,7 +37,8 @@ class UserResource(Resource):
                     'referred_by': user.referred_by,
                     'referred_by_name': user.referring_user.name if user.referring_user else None
                 }
-                output.append(user_data)
+                for user in users
+            ]
             return jsonify({'users': output})
 
     def post(self):

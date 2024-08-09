@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import uuid
 
 from werkzeug.security import generate_password_hash, check_password_hash
+
 db = SQLAlchemy()
 
 class User(db.Model):
@@ -19,8 +20,17 @@ class User(db.Model):
     referral_code = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     referred_by = db.Column(db.String(36), db.ForeignKey('users.referral_code'), nullable=True)
     referral_count = db.Column(db.Integer, default=0) 
-   
+
     role = db.relationship('Role', backref=db.backref('users', lazy=True))
+
+    incomes = db.relationship('Income', backref='user', cascade="all, delete-orphan", lazy=True)
+    expenses = db.relationship('Expense', backref='user', cascade="all, delete-orphan", lazy=True)
+    debts = db.relationship('Debt', backref='user', cascade="all, delete-orphan", lazy=True)
+    financial_reports = db.relationship('FinancialReport', backref='user', cascade="all, delete-orphan", lazy=True)
+    transactions = db.relationship('Transaction', backref='user', cascade="all, delete-orphan", lazy=True)
+    assets = db.relationship('Asset', backref='user', cascade="all, delete-orphan", lazy=True)
+    savings_goals = db.relationship('SavingsGoal', backref='user', cascade="all, delete-orphan", lazy=True)
+    settings = db.relationship('Setting', backref='user', cascade="all, delete-orphan", lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -48,7 +58,6 @@ class Income(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('incomes', lazy=True))
     category = db.relationship('IncomeCategory', backref=db.backref('incomes', lazy=True))
 
 class IncomeCategory(db.Model):
@@ -71,7 +80,6 @@ class Expense(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('expenses', lazy=True))
     category = db.relationship('ExpenseCategory', backref=db.backref('expenses', lazy=True))
 
 class ExpenseCategory(db.Model):
@@ -96,7 +104,7 @@ class Debt(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('debts', lazy=True))
+    debt_payments = db.relationship('DebtPayment', backref='debt', cascade="all, delete-orphan", lazy=True)
 
 class DebtPayment(db.Model):
     __tablename__ = 'debt_payments'
@@ -108,8 +116,6 @@ class DebtPayment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    debt = db.relationship('Debt', backref=db.backref('debt_payments', lazy=True))
-
 class FinancialReport(db.Model):
     __tablename__ = 'financial_reports'
 
@@ -119,8 +125,6 @@ class FinancialReport(db.Model):
     report_data = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('financial_reports', lazy=True))
 
 class Transaction(db.Model):
     __tablename__ = 'transactions'
@@ -135,8 +139,6 @@ class Transaction(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('transactions', lazy=True))
-
 class Asset(db.Model):
     __tablename__ = 'assets'
 
@@ -148,8 +150,6 @@ class Asset(db.Model):
     description = db.Column(db.String, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('assets', lazy=True))
 
 class SavingsGoal(db.Model):
     __tablename__ = 'savings_goals'
@@ -165,8 +165,6 @@ class SavingsGoal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('User', backref=db.backref('savings_goals', lazy=True))
-
 class Setting(db.Model):
     __tablename__ = 'settings'
 
@@ -176,5 +174,3 @@ class Setting(db.Model):
     setting_value = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = db.relationship('User', backref=db.backref('settings', lazy=True))

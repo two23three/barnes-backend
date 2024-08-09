@@ -1,17 +1,12 @@
-POST https://barnes.onrender.com/m/stk_push
+POST http://barnes.onrender.com/signup
 Content-Type: application/json
 
 {
-  "BusinessShortCode": 174379,
-    "Password": "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwODA4MTIxMzI4",
-    "Timestamp": "20240808121328",
-    "TransactionType": "CustomerPayBillOnline",
-    "Amount": 1,
-    "PartyA": 254701584681,
-    "PartyB": 174379,
-    "PhoneNumber": 254701584681,
-    "CallBackURL": "https://mydomain.com/path",
-    "AccountReference": "CompanyXLTD",
-    "TransactionDesc": "Payment of X"
+"name":"Helmers",
+"phone_number":"0712345678",
+"email":"helmer@gmail.com",
+"password":"1234",
+"role_id":
 }
+
 
