@@ -18,7 +18,6 @@ class TransactionResource(Resource):
                 'user_id': transaction.user_id,
                 'amount': str(transaction.amount),
                 'transaction_type': transaction.transaction_type,
-                'category_id': transaction.category_id,
                 'date': transaction.date.strftime('%Y-%m-%d'),
                 'description': transaction.description,
                 'created_at': transaction.created_at,
@@ -34,7 +33,6 @@ class TransactionResource(Resource):
                     'user_id': transaction.user_id,
                     'amount': str(transaction.amount),
                     'transaction_type': transaction.transaction_type,
-                    'category_id': transaction.category_id,
                     'date': transaction.date.strftime('%Y-%m-%d'),
                     'description': transaction.description,
                     'created_at': transaction.created_at,
@@ -49,7 +47,6 @@ class TransactionResource(Resource):
             user_id=data.get('user_id'),
             amount=data.get('amount'),
             transaction_type=data.get('transaction_type'),
-            category_id=data.get('category_id'),
             date=data.get('date'),
             description=data.get('description')
         )
@@ -64,7 +61,6 @@ class TransactionResource(Resource):
         transaction.user_id = data.get('user_id', transaction.user_id)
         transaction.amount = data.get('amount', transaction.amount)
         transaction.transaction_type = data.get('transaction_type', transaction.transaction_type)
-        transaction.category_id = data.get('category_id', transaction.category_id)
         transaction.date = data.get('date', transaction.date)
         transaction.description = data.get('description', transaction.description)
 
