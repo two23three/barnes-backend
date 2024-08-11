@@ -136,7 +136,6 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     amount = db.Column(db.Numeric, nullable=False)
     transaction_type = db.Column(db.String, nullable=False)
-    category_id = db.Column(db.Integer, nullable=True)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

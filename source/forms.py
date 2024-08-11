@@ -134,7 +134,6 @@ class TransactionForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
     amount = StringField('Amount', validators=[DataRequired()])  # Using DecimalField for monetary values
     transaction_type = StringField('Transaction Type', validators=[DataRequired()])
-    category_id = SelectField('Category', coerce=int)  # Optional field
     date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
     description = StringField('Description')
 
