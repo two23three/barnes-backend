@@ -6,7 +6,7 @@ from flask_cors import CORS
 from mpesa import mpesa_bp
 from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction, Asset, SavingsGoal, Setting
 from user import UserResource, UsersFinancialReport
-from views import UserModelView, IncomeModelView, ExpenseModelView, DebtModelView, DebtPaymentModelView, TransactionModelView, AssetModelView, SavingsGoalModelView, SettingModelView
+from views import UserModelView, IncomeModelView, ExpenseModelView, ExpenseCategoryModelView, DebtModelView, DebtPaymentModelView, TransactionModelView, AssetModelView, SavingsGoalModelView, SettingModelView
 from income import IncomeResource, IncomeCategoryResource
 from expense import ExpenseResource, ExpenseCategoryResource
 from assets import AssetResource 
@@ -45,7 +45,7 @@ admin.add_view(ModelView(Role, db.session))
 admin.add_view(IncomeModelView(Income, db.session))
 admin.add_view(ModelView(IncomeCategory, db.session))
 admin.add_view(ExpenseModelView(Expense, db.session))
-admin.add_view(ModelView(ExpenseCategory, db.session))
+admin.add_view(ExpenseCategoryModelView(ExpenseCategory, db.session))
 admin.add_view(DebtModelView(Debt, db.session))
 admin.add_view(DebtPaymentModelView(DebtPayment, db.session))
 admin.add_view(ModelView(FinancialReport, db.session))

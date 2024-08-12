@@ -1,7 +1,7 @@
 from flask_bcrypt import Bcrypt
 from flask_admin.contrib.sqla import ModelView
 
-from forms import UserForm, IncomeForm, ExpenseForm, DebtForm, DebtPaymentForm, TransactionForm, AssetForm, SavingsGoalForm, SettingForm
+from forms import UserForm, IncomeForm, ExpenseForm, ExpenseCategoryForm, DebtForm, DebtPaymentForm, TransactionForm, AssetForm, SavingsGoalForm, SettingForm
 
 bcrypt = Bcrypt()  # Initialize Bcrypt
 
@@ -27,6 +27,14 @@ class IncomeModelView(ModelView):
 class ExpenseModelView(ModelView):
     form = ExpenseForm
     form_excluded_columns = ('created_at', 'updated_at')
+
+# Define a custom ModelView for the Expense Category model
+class ExpenseCategoryModelView(ModelView):
+    form = ExpenseCategoryForm
+    form_excluded_columns = ('created_at', 'updated_at')
+
+    # Customize which columns are displayed in the list view
+    column_list = ['user_id', 'name', 'description', 'limit']
 
 # Define a custom ModelView for the Debt model
 class DebtModelView(ModelView):

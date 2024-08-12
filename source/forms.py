@@ -88,6 +88,18 @@ class ExpenseForm(FlaskForm):
 
         return True
 
+# Create a custom expense category form
+class ExpenseCategoryForm(FlaskForm):
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired()])
+    description = TextAreaField('Description')
+    limit = DecimalField('Limit', places=2)
+
+    def __init__(self, *args, **kwargs):
+        super(ExpenseCategoryForm, self).__init__(*args, **kwargs)
+        # Populate the user_id select field with options from the users table
+        self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
+
 # Create a custom form for the Debt model
 class DebtForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
