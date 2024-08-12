@@ -92,7 +92,10 @@ class ExpenseCategory(db.Model):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
     limit = db.Column(db.Numeric(10, 2), nullable=True) 
-    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) 
+
+    user = db.relationship('User', backref=db.backref('expense_categories', lazy=True))  
+
 class Debt(db.Model):
     __tablename__ = 'debts'
 
@@ -136,6 +139,7 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     amount = db.Column(db.Numeric, nullable=False)
     transaction_type = db.Column(db.String, nullable=False)
+    category_id = db.Column(db.Integer, nullable=True)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
