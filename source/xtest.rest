@@ -1,12 +1,11 @@
-POST http://0.0.0.0:5000/signup
+GET http://barnes.onrender.com/categories
 Content-Type: application/json
 
-{
-"name":"Helmers",
-"phone_number":"0712345678",
-"email":"helmer@gmail.com",
-"password":"1234",
-"role_id":1
-}
+# {
+# "user_id": 2,
+# "description":"food stuffs",
+# "limit":10000,
+# "name":"clothing"
 
+# }
 

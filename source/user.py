@@ -36,7 +36,7 @@ class UserResource(Resource):
                     'updated_at': user.updated_at,
                     'referral_code': user.referral_code,
                     'referred_by': user.referred_by,
-                    'referral_count' : user.refferral_count,
+                    'referral_count' : user.refferral_count if  user.referral_count > 0 else None,
                     'referred_by_name': user.referring_user.name if user.referring_user else None
                 }
                 for user in users
