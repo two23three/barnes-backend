@@ -17,12 +17,6 @@ def generate_access_token(consumer_key, consumer_secret):
     return access_token
 
 def get_user_by_id(user_id):
-    """
-    Fetches user details from the database by user_id.
-
-    :param user_id: ID of the user.
-    :return: A dictionary containing user details or None if the user is not found.
-    """
     user = User.query.filter_by(id=user_id).first()
     if user:
         return {
@@ -91,7 +85,6 @@ def confirmation():
     
     return jsonify({"ResultCode": 1, "ResultDesc": "Failed"}), 400
 
-
 @mpesa_bp.route('/simulate', methods=['POST'])
 def simulate():
     try:
@@ -114,10 +107,14 @@ def simulate():
 def stk_push():
     try:
         data = request.get_json()
+
+        # Log the received data for debugging purposes
+        print("Received data:", data)
+
         user_id = data.get('user_id')
         amount = data.get('amount')
 
-        # Validate the amount 
+        # Validate the amount
         if not amount or not isinstance(amount, (int, float)) or amount <= 0:
             return jsonify({'error': 'Invalid amount'}), 400
 
@@ -153,14 +150,22 @@ def stk_push():
         response_data = response.json()
 
         if response_data.get('ResponseCode') == '0': 
-            # Update the user's savings goal
-            savings_goals = SavingsGoal.query.filter_by(user_id=user_id).all()
-            for goal in savings_goals:
-                goal.current_amount += amount
-                db.session.add(goal)
-            db.session.commit()
-            return jsonify({'message': 'STK push successful', 'data': response_data})
-        else:
-            return jsonify({'error': 'STK push failed', 'data': response_data}), 400
+            # Update the user's savings goal based on the goal name
+            savings_goal_name = data.get('goal_name')
+            if not savings_goal_name:
+                return jsonify({'error': 'Goal name not provided'}), 400
+
+            savings_goal = SavingsGoal.query.filter_by(user_id=user_id, name=savings_goal_name).first()
+            if savings_goal:
+                savings_goal.current_amount += Decimal(amount)
+                db.session.commit()
+                return jsonify({'message': 'STK push successful', 'data': response_data})
+            else:
+                return jsonify({'error': 'Savings goal not found'}), 404
+
+        return jsonify({'error': 'STK push failed', 'data': response_data}), 400
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the exception for debugging
+        print("Exception occurred:", str(e))
+        return jsonify({'error': 'An error occurred', 'message': str(e)}), 500
