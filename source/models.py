@@ -69,6 +69,9 @@ class IncomeCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    user = db.relationship('User', backref=db.backref('income_categories', lazy=True)) 
     
 class Expense(db.Model):
     __tablename__ = 'expenses'

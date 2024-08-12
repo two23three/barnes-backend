@@ -33,6 +33,18 @@ class IncomeForm(FlaskForm):
         # Populate the category_id select field with options from the income_categories table
         self.category_id.choices = [(category.id, category.name) for category in IncomeCategory.query.all()]
 
+# Create a custom form for the IncomeCategory model
+class IncomeCategoryForm(FlaskForm):
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired()])
+    description = StringField('Description')
+    
+    def __init__(self, *args, **kwargs):
+        super(IncomeCategoryForm, self).__init__(*args, **kwargs)
+        # Populate the user_id select field with options from the users table
+        self.user_id.choices = [(user.id, user.name) for user in User.query.all()]
+
+
 # Create a custom form for the Expense model
 class ExpenseForm(FlaskForm):
     user_id = SelectField('User', coerce=int, validators=[DataRequired()])
