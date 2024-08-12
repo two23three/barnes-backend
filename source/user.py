@@ -18,14 +18,15 @@ class UserResource(Resource):
                 'created_at': user.created_at,
                 'updated_at': user.updated_at,
                 'referral_code': user.referral_code,
-                'referred_by': user.referred_by
+                'referred_by': user.referred_by,
+                'referral_count' : user.refferral_count,
+                'referred_by_name': user.referring_user.name if user.referring_user else None
             }
             return jsonify({'user': user_data})
         else:
             users = User.query.all()
-            output = []
-            for user in users:
-                user_data = {
+            output = [
+                {
                     'id': user.id,
                     'name': user.name,
                     'phone_number': user.phone_number,
@@ -34,9 +35,12 @@ class UserResource(Resource):
                     'created_at': user.created_at,
                     'updated_at': user.updated_at,
                     'referral_code': user.referral_code,
-                    'referred_by': user.referred_by
+                    'referred_by': user.referred_by,
+                    'referral_count' : user.refferral_count if  user.referral_count > 0 else None,
+                    'referred_by_name': user.referring_user.name if user.referring_user else None
                 }
-                output.append(user_data)
+                for user in users
+            ]
             return jsonify({'users': output})
 
     def post(self):
@@ -57,8 +61,8 @@ class UserResource(Resource):
             if not referred_by_user:
                 return {'message': 'Invalid referral code'}, 400
 
-        # Generate a unique referral code for the new user
-        new_user_referral_code = str(uuid.uuid4())
+        # Generate a unique referral code for the new user using their username
+        new_user_referral_code = f"{name[:3]}-{str(uuid.uuid4())[:4]}"
 
         new_user = User(
             name=name,
@@ -95,7 +99,7 @@ class UserResource(Resource):
         db.session.commit()
 
         return {'message': 'User deleted successfully'}
-    
+
 class UsersFinancialReport(Resource):
     def get(self, user_id, report_id=None):
         if report_id:
@@ -156,4 +160,5 @@ class UsersFinancialReport(Resource):
         report = FinancialReport.query.filter_by(user_id=user_id, id=report_id).first_or_404()
         db.session.delete(report)
         db.session.commit()
-    
+
+        return {'message': 'Financial report deleted successfully'}

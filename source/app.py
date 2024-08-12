@@ -1,24 +1,35 @@
-from flask import Flask
 from flask import Flask, request, jsonify
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_restful import Api
+from flask_cors import CORS  
+from mpesa import mpesa_bp
 from models import db, User, Role, Income, IncomeCategory, Expense, ExpenseCategory, Debt, DebtPayment, FinancialReport, Transaction, Asset, SavingsGoal, Setting
 from user import UserResource, UsersFinancialReport
-from views import UserModelView, IncomeModelView, ExpenseModelView, DebtModelView, DebtPaymentModelView, TransactionModelView, AssetModelView, SavingsGoalModelView, SettingModelView
+from views import UserModelView, IncomeModelView, ExpenseModelView, ExpenseCategoryModelView, DebtModelView, DebtPaymentModelView, TransactionModelView, AssetModelView, SavingsGoalModelView, SettingModelView
 from income import IncomeResource, IncomeCategoryResource
 from expense import ExpenseResource, ExpenseCategoryResource
-from source.transaction import TransactionResource
-from debt import DebtResource
-from debtPayment import DebtPaymentResource
-import config
 from assets import AssetResource 
+from transaction import TransactionResource
 from savingsGoal import SavingsGoalResource
 from settings import SettingResource
+from debt import DebtResource
+from debtPayment import DebtPaymentResource
 from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
+import requests
+from requests.auth import HTTPBasicAuth
+from flask_migrate import Migrate
+
 from flask_bcrypt import Bcrypt
+import config
+import re
+
 app = Flask(__name__)
 app.config.from_object(config.Config)
+migrate = Migrate(app, db)
+app.register_blueprint(mpesa_bp, url_prefix='/m')
 
 # Initialize extensions
 db.init_app(app)
@@ -26,6 +37,7 @@ api = Api(app)
 admin = Admin(app, name='MyApp', template_mode='bootstrap3')
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
+CORS(app)  
 
 # Add model views to Flask-Admin
 admin.add_view(UserModelView(User, db.session))
@@ -33,7 +45,7 @@ admin.add_view(ModelView(Role, db.session))
 admin.add_view(IncomeModelView(Income, db.session))
 admin.add_view(ModelView(IncomeCategory, db.session))
 admin.add_view(ExpenseModelView(Expense, db.session))
-admin.add_view(ModelView(ExpenseCategory, db.session))
+admin.add_view(ExpenseCategoryModelView(ExpenseCategory, db.session))
 admin.add_view(DebtModelView(Debt, db.session))
 admin.add_view(DebtPaymentModelView(DebtPayment, db.session))
 admin.add_view(ModelView(FinancialReport, db.session))
@@ -54,6 +66,12 @@ api.add_resource(AssetResource, '/assets', '/assets/<int:id>')
 api.add_resource(UsersFinancialReport, '/user/<int:user_id>/financialreports', '/user/<int:user_id>/financialreports/<int:report_id>')
 api.add_resource(TransactionResource, '/transactions', '/transactions/<int:id>')
 api.add_resource(SavingsGoalResource, '/savings', '/savings/<int:id>')
+api.add_resource(SettingResource, '/settings', '/settings/<int:id>')
+
+# Define validation patterns
+email_pattern = re.compile(r"[^@]+@[^@]+\.[^@]+")
+kenyan_phone_pattern = re.compile(r"^254[71]\d{8}$")
+
 @app.route('/')
 def index():
     return "Welcome to Barnes!"
@@ -61,43 +79,108 @@ def index():
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
-
-    # Validate input data
-    if not all(key in data for key in ('name', 'email', 'password', 'role_id')):
+    
+    if not all(key in data for key in ('name', 'email', 'password', 'role_id', 'phone_number')):
         return jsonify({'msg': 'Missing required fields'}), 400
-
+    
     name = data.get('name')
     phone_number = data.get('phone_number')
     email = data.get('email')
     password = data.get('password')
     role_id = data.get('role_id')
-
-    # Check if user already exists
+    referral_code = data.get('referral_code')
+    
     if User.query.filter_by(email=email).first():
         return jsonify({'msg': 'User already exists'}), 400
-
-    # Hash the password using Flask-Bcrypt
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-    # Create a new user
+    
+    if not email_pattern.match(email):
+        return jsonify({'msg': 'Invalid email format'}), 400
+    
+    # Convert phone numbers starting with '0' to '254'
+    if phone_number.startswith('0'):
+        phone_number = '254' + phone_number[1:]
+    
+    # Validate the phone number format after conversion
+    if not kenyan_phone_pattern.match(phone_number):
+        return jsonify({'msg': 'Invalid phone number format'}), 400
+    
+    referred_by_user = None
+    if referral_code:
+        referred_by_user = User.query.filter_by(referral_code=referral_code).first()
+        if not referred_by_user:
+            return jsonify({'msg': 'Invalid referral code'}), 400
+    
+    new_user_referral_code = f"{name[:3]}-{str(uuid.uuid4())[:4]}"
+    
+    hashed_password = generate_password_hash(password)
+    
     new_user = User(
         name=name,
         phone_number=phone_number,
         email=email,
         password_hash=hashed_password,
-        role_id=role_id
+        role_id=role_id,
+        referral_code=new_user_referral_code,
+        referred_by=referred_by_user.referral_code if referred_by_user else None
     )
-
+    
     db.session.add(new_user)
+    
+    if referred_by_user:
+        referred_by_user.referral_count += 1
+        db.session.add(referred_by_user)
+    
     db.session.commit()
-
-    # Create access token
+    
     access_token = create_access_token(identity=new_user.id)
     refresh_token = create_refresh_token(identity=new_user.id)
-
+    
     return jsonify({
-        'msg': 'User created successfully'
+        'msg': 'User created successfully',
+        'access_token': access_token,
+        'refresh_token': refresh_token
     }), 201
+
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    
+    if not all(key in data for key in ('password',)):
+        return jsonify({'msg': 'Missing required fields'}), 400
+
+    email = data.get('email')
+    phone_number = data.get('phone_number')
+    password = data.get('password')
+    
+    if not email and not phone_number:
+        return jsonify({'msg': 'Missing email or phone number'}), 400
+
+    if email and not email_pattern.match(email):
+        return jsonify({'msg': 'Invalid email format'}), 400
+
+    if phone_number and not kenyan_phone_pattern.match(phone_number):
+        return jsonify({'msg': 'Invalid phone number format'}), 400
+
+    user = None
+    if email:
+        user = User.query.filter_by(email=email).first()
+    if phone_number:
+        user = User.query.filter_by(phone_number=phone_number).first()
+    
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({'msg': 'Invalid credentials'}), 401
+    
+    access_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+    
+    return jsonify({
+        'msg': 'Login successful',
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }), 200
+
 
 if __name__ == '__main__':
     with app.app_context():

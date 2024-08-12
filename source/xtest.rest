@@ -1,0 +1,11 @@
+GET http://barnes.onrender.com/categories
+Content-Type: application/json
+
+# {
+# "user_id": 2,
+# "description":"food stuffs",
+# "limit":10000,
+# "name":"clothing"
+
+# }
+
