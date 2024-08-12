@@ -4,6 +4,8 @@ from datetime import datetime
 from models import db, Expense, ExpenseCategory
 from config import Config
 from decimal import Decimal, InvalidOperation
+from sqlalchemy.exc import IntegrityError
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -136,29 +138,44 @@ class ExpenseCategoryResource(Resource):
             return jsonify({'categories': output})
 
     def post(self):
-        data = request.get_json()
-        name = data.get('name')
-        description = data.get('description')
-        user_id = data.get('user_id')
-        limit_str = data.get('limit')  # Optional limit field
-
-        try:
-            limit = Decimal(limit_str) if limit_str else None
-        except (InvalidOperation, ValueError):
-            return jsonify({'message': 'Invalid limit value'}), 400
-
-        # Create new category
-        new_category = ExpenseCategory(
-            name=name, 
-            description=description, 
-            user_id=user_id, 
-            limit=limit
-        )
-        db.session.add(new_category)
-        db.session.commit()
-
-        return jsonify({'message': 'Category created successfully'}), 201
-
+      data = request.get_json()
+  
+      # Extract and validate input data
+      name = data.get('name')
+      description = data.get('description')
+      user_id = data.get('user_id')
+      limit_str = data.get('limit')  # Optional limit field
+  
+      # Check for missing required fields
+      if not name or not user_id:
+          return {'message': 'Name and user_id are required fields.'}, 400
+  
+      # Validate and convert limit to Decimal if provided
+      try:
+          limit = Decimal(limit_str) if limit_str else None
+      except (InvalidOperation, ValueError):
+          return {'message': 'Invalid limit value.'}, 400
+  
+      # Create new category
+      new_category = ExpenseCategory(
+          name=name, 
+          description=description, 
+          user_id=user_id, 
+          limit=limit
+      )
+  
+      try:
+          db.session.add(new_category)
+          db.session.commit()
+      except IntegrityError:
+          db.session.rollback()
+          return {'message': 'Failed to create category. Integrity constraint violated.'}, 400
+      except Exception as e:
+          db.session.rollback()
+          return {'message': f'An unexpected error occurred: {str(e)}'}, 500
+  
+      return {'message': 'Category created successfully'}, 201
+  
     def put(self, id):
         data = request.get_json()
         category = ExpenseCategory.query.get_or_404(id)
