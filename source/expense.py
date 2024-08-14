@@ -24,8 +24,8 @@ class ExpenseResource(Resource):
                 'date': expense.date.strftime('%Y-%m-%d'),
                 'description': expense.description,
                 'is_recurring': expense.is_recurring,
-                'created_at': expense.created_at,
-                'updated_at': expense.updated_at
+                'created_at': expense.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'updated_at': expense.updated_at.strftime('%Y-%m-%d %H:%M:%S')
             }
             return {'expense': expense_data}
         else:
@@ -40,8 +40,8 @@ class ExpenseResource(Resource):
                     'date': expense.date.strftime('%Y-%m-%d'),
                     'description': expense.description,
                     'is_recurring': expense.is_recurring,
-                    'created_at': expense.created_at,
-                    'updated_at': expense.updated_at
+                    'created_at': expense.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'updated_at': expense.updated_at.strftime('%Y-%m-%d %H:%M:%S')
                 }
                 output.append(expense_data)
             return {'expenses': output}
