@@ -37,7 +37,7 @@ api = Api(app)
 admin = Admin(app, name='MyApp', template_mode='bootstrap3')
 jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
-CORS(app)  
+CORS(app, resources={r"/*": {"origins": ["https://barnesgogo.vercel.app/", "http://localhost:5173/"]}})  
 
 # Add model views to Flask-Admin
 admin.add_view(UserModelView(User, db.session))
